@@ -17,6 +17,9 @@ Live demo: https://voice-receptionist-demo-swart.vercel.app (the call page and t
 | Contractor setup | `live/setup.html` | Eight-step self-serve onboarding to a successful test call, a dashboard, and versions of the agent |
 | Token service | `live/api/token.js`, `live/token_server.py` | Issues short-lived call tokens, checks an optional passcode, rate-limits calls |
 | Evaluation | `scripts/eval_runs.py` | Runs simulated callers through scenarios repeatedly and scores the saved records |
+| Example recording | `scripts/render_call.py`, `live/assets/example_call.mp3` | Turns a test run into a two-voice call recording (the setup page plays it when a live call is not possible) |
+
+GitHub shows the pages in `live/` as source code. To see them running, open the live demo link above (the call page at `/` and the setup flow at `/setup.html`), or run them locally as described under "Run it".
 
 ## How a call works
 
@@ -45,8 +48,12 @@ The agent is a Python program that runs the loop above for each call. The model 
 
 Measured on the prototype, with simulated callers in text and one live voice test. These show consistency, not accuracy on real phone calls.
 
-- First word after the caller stops: median 1.22 s, slowest 2.7 s (13 replies on the cloud-hosted agent; replies after a records look-up were slowest).
-- Scenario runs: fallback time 6/6, trade word correction 6/6, interruption 6/6, emergency leak 3/3, outside the service area 3/3, a second need captured 5/6.
+- First word after the caller stops: median 1.22 s, slowest 2.7 s (13 replies on an earlier cloud deployment of this same agent code; replies after a records look-up were slowest). Not re-measured on this deployment.
+- Scenario runs on the current code, with a simulated caller in text (a model run is not deterministic, so each scenario is repeated):
+  - Returning customer with a changed time, a trade word to correct and a second need (nine checks): 11 runs, 6 passed every check, 3 missed one, 1 missed two, and 1 failed five (the agent treated a known customer as new). The misses were the interruption handling and logging the second need as its own case.
+  - New customer booking (twelve checks): 4 runs; 1 passed every check and 3 missed one (saving the access note about a dog).
+  - Emergency leak (seven checks): 4 of 4 passed every check.
+  - Caller outside the service area (six checks): 5 of 5 passed every check.
 - Silence and unfinished lead: passed once, by voice, on the cloud agent.
 
 ## What is not built
