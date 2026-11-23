@@ -1,0 +1,23 @@
+﻿# Secrets
+.env
+.env.*
+!.env.example
+
+# Python / Node
+.venv/
+__pycache__/
+*.pyc
+node_modules/
+
+# Local / generated
+.vercel/
+live/.vercel/
+live/.env.local
+deploy/
+traces/
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+

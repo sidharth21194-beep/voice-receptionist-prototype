@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Voice Receptionist Setup</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Contractor self-serve prototype. Navy sidebar, orange accent, light content. */
+:root{
+  --bg:#f8f5f0; --card:#fff; --ink:#16202e; --muted:#5b6574; --line:#e8ddd5; --soft:#f3ece4;
+  --navy:#13213d; --navy-2:#1c2e50; --navy-ink:#e8edf7; --navy-mute:#9fb0cf;
+  --orange:#fd5000; --orange-ink:#c63d00; --orange-soft:#fff1ec;
+  --ok:#12875a; --ok-bg:#e6f6ee; --ok-ink:#0d6b47; --warn-bg:#fff4dc; --warn-ink:#8a5a00; --bad:#b5271c; --bad-bg:#fde8e6; --bad-ink:#9b2218;
+  --caller:#3d63a8; --listen:#6b3fe0; --think:#e04600; --read:#0a8a96; --write:#12875a; --safety:#b5271c; --speak:#16202e; --call:#6b7280;
+  --f-head:"Plus Jakarta Sans","Inter",system-ui,sans-serif; --f-body:"Inter",system-ui,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12151b; --card:#1b1f27; --ink:#eef1f6; --muted:#9aa4b2; --line:#2b313c; --soft:#222732;
+  --navy:#0c1528; --navy-2:#162340;
+  --orange:#ff6a2b; --orange-ink:#ff9a6b; --orange-soft:#2d1d16;
+  --ok:#4fd29c; --ok-bg:#10281e; --ok-ink:#6fe0aa; --warn-bg:#2e2410; --warn-ink:#f2c466; --bad:#ff7b6f; --bad-bg:#3a1714; --bad-ink:#ff9a90;
+  --caller:#7ea3e6; --listen:#a58bff; --think:#ff7a3d; --read:#4fc3cf; --write:#4fd29c; --safety:#ff7b6f; --speak:#eef1f6; --call:#9aa4b2; color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-body);-webkit-text-size-adjust:100%}
+h1,h2,h3{font-family:var(--f-head);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:clamp(24px,3.4vw,32px);line-height:1.15;font-weight:800}
+h2{font-size:18px;font-weight:800} h3{font-size:15px;font-weight:700} p{margin:0}
+.kicker{font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.muted{color:var(--muted)} .hide{display:none!important}
+button{font-family:inherit}
+.btn{font:600 14px var(--f-body);border:1.5px solid var(--line);background:var(--card);color:var(--ink);padding:10px 16px;border-radius:10px;cursor:pointer;min-height:44px}
+.btn.go{background:var(--orange);border-color:var(--orange);color:#fff}
+.btn.quiet{border-color:transparent;background:none;color:var(--muted)}
+.btn.end{background:var(--bad-bg);border-color:var(--bad);color:var(--bad-ink)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,.chip button:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+label.f{display:block;font-size:13px;font-weight:600;margin-top:14px}
+label.f small{font-weight:400;color:var(--muted);display:block}
+input[type=text],input[type=password],input[type=email],select,textarea{width:100%;font:inherit;padding:10px 12px;border:1.5px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink);margin-top:5px;min-height:44px}
+textarea{min-height:92px;resize:vertical}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.banner{display:flex;gap:10px;background:var(--warn-bg);color:var(--warn-ink);border-radius:10px;padding:9px 13px;font-size:12.5px;margin-bottom:14px}
+
+/* shell */
+.shell{display:grid;grid-template-columns:268px minmax(0,1fr);min-height:100vh}
+.side{background:var(--navy);color:var(--navy-ink);padding:22px 16px;position:sticky;top:0;height:100vh;overflow:auto}
+.brand{font:800 17px var(--f-head);display:flex;align-items:center;gap:9px}
+.brand i{width:26px;height:26px;border-radius:7px;background:var(--orange);display:inline-block}
+.brand small{display:block;font:500 11px var(--f-body);color:var(--navy-mute);letter-spacing:.04em}
+.tag{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--navy-mute);color:var(--navy-mute);border-radius:999px;padding:1px 8px;margin-top:10px}
+.stepper{list-style:none;margin:22px 0 0;padding:0}
+.stepper li{display:flex;gap:11px;align-items:flex-start;padding:9px 8px;border-radius:10px;color:var(--navy-mute);font-size:14px;cursor:default}
+.stepper li .n{flex:none;width:24px;height:24px;border-radius:50%;border:2px solid var(--navy-mute);display:grid;place-items:center;font:700 11.5px var(--f-body)}
+.stepper li small{display:block;font-size:11.5px;opacity:.85}
+.stepper li.done{color:var(--navy-ink)} .stepper li.done .n{background:var(--ok);border-color:var(--ok);color:#fff}
+.stepper li.cur{background:var(--navy-2);color:#fff} .stepper li.cur .n{border-color:var(--orange);background:var(--orange);color:#fff}
+.stepper li.can{cursor:pointer}
+.clock{margin-top:20px;background:var(--navy-2);border-radius:12px;padding:12px 13px;font-size:13px}
+.clock b{font:800 22px var(--f-head);display:block;color:#fff}
+.bar-out{height:6px;border-radius:6px;background:rgba(255,255,255,.15);margin-top:8px;overflow:hidden}.bar-in{height:100%;background:var(--orange);transition:width .3s}
+.main{padding:26px clamp(16px,3vw,40px) 120px;max-width:1120px;width:100%}
+.topbar{display:none}
+.cols{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px;margin-top:16px;align-items:start}
+.who h3{margin-bottom:6px}.who ul{margin:4px 0 12px;padding-left:18px;color:var(--muted);font-size:13.5px}.who li{margin:3px 0}
+.who .a{border-left:4px solid var(--ok);padding-left:12px}.who .y{border-left:4px solid var(--orange);padding-left:12px;margin-top:14px}
+.lock{display:inline-flex;gap:5px;align-items:center;font-size:11.5px;font-weight:700;color:var(--muted);background:var(--soft);border-radius:6px;padding:2px 8px}
+.imp{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:1px 7px;border-radius:4px;background:var(--ok-bg);color:var(--ok-ink);margin-left:6px;vertical-align:1px}
+.nav{display:flex;gap:10px;justify-content:space-between;align-items:center;margin-top:18px;flex-wrap:wrap}
+.opt{display:flex;gap:11px;align-items:flex-start;border:1.5px solid var(--line);border-radius:11px;padding:11px 13px;cursor:pointer;margin-top:9px;background:var(--card)}
+.opt input{margin-top:4px;accent-color:var(--orange);width:18px;height:18px;flex:none}
+.opt:has(input:checked){border-color:var(--orange);background:var(--orange-soft)}
+.opt small{display:block;color:var(--muted)}
+.opt.fixed{background:var(--soft);cursor:default}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{display:inline-flex;gap:6px;align-items:center;background:var(--soft);border-radius:999px;padding:5px 6px 5px 12px;font-size:13.5px}
+.chip button{border:0;background:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;padding:4px 7px;border-radius:50%;min-width:28px;min-height:28px}
+.chip.sug{background:var(--orange-soft);border:1px dashed var(--orange);cursor:pointer;padding:5px 12px}
+.say{background:var(--orange-soft);border-radius:10px;padding:10px 12px;margin-top:10px;font-size:14px}
+.preview{background:var(--navy);color:#fff;border-radius:14px;padding:14px 16px;margin-top:12px;font-size:14.5px}
+.preview small{display:block;color:var(--navy-mute);font-size:11px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pill{font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:999px;display:inline-block}
+.pill.ok{background:var(--ok-bg);color:var(--ok-ink)}.pill.warn{background:var(--warn-bg);color:var(--warn-ink)}.pill.bad{background:var(--bad-bg);color:var(--bad-ink)}.pill.mute{background:var(--soft);color:var(--muted)}
+.check{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+.check .ic{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:800;background:var(--soft);color:var(--muted)}
+.check.ok .ic{background:var(--ok);color:#fff}.check.bad .ic{background:var(--bad);color:#fff}
+.check small{display:block;color:var(--muted)}
+.status{display:inline-flex;gap:8px;align-items:center;font-size:13px;color:var(--muted)}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--call);display:inline-block}.dot.on{background:var(--write)}.dot.talk{background:var(--orange)}
+.tx{display:flex;flex-direction:column;gap:8px;margin-top:12px;max-height:330px;overflow:auto}
+.msg{padding:8px 12px;border-radius:12px;max-width:92%;overflow-wrap:anywhere;font-size:14px}
+.msg.agent{background:var(--card);border:1px solid var(--line);align-self:flex-start}
+.msg.caller{background:var(--soft);align-self:flex-end}.msg.interim{opacity:.6;font-style:italic}
+.msg b{display:block;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.tbl th{text-align:left;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:8px;border-bottom:1px solid var(--line)}
+.tbl td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top;overflow-wrap:anywhere}
+.scroll{overflow-x:auto}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:14px}
+.kpi b{display:block;font:800 28px var(--f-head);color:var(--orange-ink)}.kpi span{font-size:12.5px;color:var(--muted)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:16px 0 4px;overflow-x:auto}
+.tab{background:none;border:0;border-bottom:3px solid transparent;padding:10px 14px;font:600 14px var(--f-body);color:var(--muted);cursor:pointer;white-space:nowrap;min-height:44px}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--orange)}
+.attn{display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:10px}
+.err{background:var(--bad-bg);color:var(--bad-ink);border-radius:10px;padding:10px 14px;margin-top:10px;font-size:14px}
+.good{background:var(--ok-bg);color:var(--ok-ink);border-radius:10px;padding:10px 14px;margin-top:10px;font-size:14px}
+.switch{display:inline-flex;align-items:center;gap:10px;cursor:pointer}
+.switch input{width:20px;height:20px;accent-color:var(--orange)}
+.login{min-height:100vh;display:grid;place-items:center;padding:20px;background:var(--navy)}
+.login .card{width:min(440px,100%)}
+.foot{margin-top:26px;font-size:12.5px;color:var(--muted)}
+.foot a{color:var(--muted)}
+
+/* narrow screens = the mobile version */
+@media(max-width:900px){
+  .shell{display:block}
+  .side{display:none}
+  .topbar{display:block;position:sticky;top:0;z-index:5;background:var(--navy);color:#fff;padding:10px 16px 12px;padding-top:max(10px,env(safe-area-inset-top))}
+  .topbar .row1{display:flex;justify-content:space-between;align-items:center;font:700 14px var(--f-head)}
+  .topbar .row1 span{font:500 12.5px var(--f-body);color:var(--navy-mute)}
+  .main{padding:16px 16px 130px}
+  .cols{grid-template-columns:minmax(0,1fr)}
+  .grid2{grid-template-columns:minmax(0,1fr)}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .nav{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--card);border-top:1px solid var(--line);margin:0;padding:10px 16px calc(10px + env(safe-area-inset-bottom));flex-wrap:nowrap}
+  .nav .btn{flex:1}
+  .nav .btn.quiet{flex:none}
+}
+.phoneview{display:none}
+body.phoneon .shell{display:none}
+body.phoneon .phoneview{display:flex;min-height:100vh;align-items:center;justify-content:center;gap:40px;padding:24px;flex-wrap:wrap}
+.phone{width:410px;height:840px;max-height:92vh;border-radius:44px;background:#0b0f18;padding:14px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.phone iframe{width:100%;height:100%;border:0;border-radius:32px;background:var(--bg)}
+.pvnote{max-width:300px}
+body.embed .devbtn{display:none}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="phoneview" id="phoneview"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/livekit-client@2.19.2/dist/livekit-client.umd.js"></script>
+<script>
+(function(){
+"use strict";
+var LOCAL=/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+var TOKEN_URL=window.AVA_TOKEN_URL||(LOCAL?"http://localhost:8787/token":"/api/token");
+var EMBED=/[?&]embed=1/.test(location.search); if(EMBED) document.body.classList.add("embed");
+var $=function(id){return document.getElementById(id)};
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+
+/* ---------- state ---------- */
+var KEY="voiceagent_setup_v1";
+var DEFAULTS={signedIn:false,step:0,startedAt:0,doneAt:0,live:false,tab:"overview",
+  cfg:{company:"Ridgeline Roofing",hours:"Mon-Fri 8 AM to 5 PM",area:"King and Snohomish counties, WA",callback:"same business day",
+    svc:{inspection:true,repair:true,install:"callback"},emergencyPhone:"(425) 555-0123",
+    words:["architectural shingles","fascia board","valley metal","flashing","soffit","ridge vent","drip edge"],
+    persona:"Ava",voice:"aura-2-thalia-en",tone:"warm",greetingIntro:"",rules:"",
+    fwd:{mode:"after",verified:false}},
+  test:{passed:false,example:false,checks:{}},
+  versions:[],version:1,archive:[]};
+var S=load();
+function clone(o){return JSON.parse(JSON.stringify(o))}
+function load(){try{var j=JSON.parse(localStorage.getItem(KEY)||"null");if(j){var d=clone(DEFAULTS);for(var k in j){d[k]=j[k]}return d}}catch(e){}return clone(DEFAULTS)}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function snapshot(){return {version:S.version,cfg:clone(S.cfg),versions:clone(S.versions),startedAt:S.startedAt,doneAt:S.doneAt,test:clone(S.test),retired:false}}
+function freshLive(){if(live&&live.timer)clearInterval(live.timer);live={room:null,steps:[],records:[],transcript:[],ended:false,started:false,interim:null,metrics:[],hello:false,timer:null,startAt:0,endReason:""}}
+function newVersion(){var arc=S.archive.slice();arc.push(snapshot());freshLive();var d=clone(DEFAULTS);d.signedIn=true;d.version=S.version+1;d.archive=arc;d.startedAt=Date.now();S=d;save();render()}
+function restoreFrom(a,arc){freshLive();var d=clone(DEFAULTS);d.signedIn=true;d.version=a.version;d.cfg=a.cfg;d.versions=a.versions;d.startedAt=a.startedAt;d.doneAt=a.doneAt;d.test=a.test;d.live=true;d.tab="versions";d.archive=arc;S=d;save();render()}
+function makeLiveAgain(i){var a=S.archive[i],cur=snapshot();cur.retired=true;var arc=S.archive.slice();arc.splice(i,1,cur);restoreFrom(a,arc)}
+function cancelNewVersion(){var a=S.archive[S.archive.length-1];restoreFrom(a,S.archive.slice(0,-1))}
+
+var STEPS=[
+ {id:"start",t:"Before you start",min:1},
+ {id:"business",t:"Your business",min:2},
+ {id:"abilities",t:"What the agent can do",min:2},
+ {id:"words",t:"Your roofing words",min:2},
+ {id:"voice",t:"Name, voice and greeting",min:2},
+ {id:"phone",t:"Connect your phone line",min:2},
+ {id:"test",t:"Test call",min:3},
+ {id:"golive",t:"Go live",min:1}];
+var TOTAL=STEPS.reduce(function(a,s){return a+s.min},0);
+
+var VOICES=[["aura-2-thalia-en","Thalia","Clear and warm, female"],["aura-2-luna-en","Luna","Friendly and soft, female"],["aura-2-apollo-en","Apollo","Confident and calm, male"],["aura-2-orion-en","Orion","Steady and approachable, male"]];
+var SUGGESTED=["Malarkey shingles","GAF Timberline","step flashing","counter flashing","skylight","downspout","ice and water shield","underlayment","chimney cricket","Everett","Kenmore","Bothell"];
+function greetingText(){var c=S.cfg;var intro=c.greetingIntro.trim()||("Thanks for calling "+c.company+", this is "+c.persona+", the virtual assistant.");return intro+" This call may be recorded to help with your request. How can I help?"}
+function rulesText(){var c=S.cfg,r=[];if(c.tone==="formal")r.push("Use a formal, courteous tone: say Mr. or Ms. when you know the caller's surname, and avoid slang.");else r.push("Use a warm, friendly, brisk tone.");
+  r.push("Never quote prices or estimates; say the inspector will provide one after the visit.");
+  r.push("For emergencies the human team can be reached at "+c.emergencyPhone+".");
+  if(c.rules.trim())r.push(c.rules.trim());return r.join(" ")}
+function servicesList(){var s=S.cfg.svc,l=[];if(s.inspection)l.push("Roof Inspection");if(s.repair)l.push("Repair Service");if(s.install==="book")l.push("Install/Replace");return l}
+
+/* ---------- rendering helpers ---------- */
+function minsLeft(){var left=0;for(var i=S.step;i<STEPS.length;i++)left+=STEPS[i].min;return left}
+function elapsed(){if(!S.startedAt)return 0;return Math.max(0,Math.round(((S.doneAt||Date.now())-S.startedAt)/1000))}
+function fmtDur(s){return Math.floor(s/60)+" min "+("0"+(s%60)).slice(-2)+" s"}
+function who(auto,you){return '<div class="card who"><div class="a"><h3>Set up for you</h3><ul>'+auto.map(function(x){return "<li>"+x+"</li>"}).join("")+'</ul></div><div class="y"><h3>Your decisions</h3><ul>'+you.map(function(x){return "<li>"+x+"</li>"}).join("")+'</ul></div></div>'}
+function shell(inner,navHtml){
+  var pct=Math.round((STEPS.slice(0,S.step).reduce(function(a,s){return a+s.min},0))/TOTAL*100);
+  var side='<aside class="side"><div class="brand"><i></i><div>Voice Receptionist<small>Setup</small></div></div><span class="tag">Concept prototype</span><ol class="stepper">'+
+    STEPS.map(function(s,i){var cls=i<S.step?"done":(i===S.step?"cur":"");return '<li class="'+cls+(i<S.step?" can":"")+'" data-go="'+i+'"><span class="n">'+(i<S.step?"✓":(i+1))+'</span><span>'+s.t+'<small>about '+s.min+' min</small></span></li>'}).join("")+'</ol>'+
+    '<div class="clock"><span class="muted" style="color:var(--navy-mute)">Time left, roughly</span><b>'+minsLeft()+' min</b><div class="bar-out"><div class="bar-in" style="width:'+pct+'%"></div></div></div>'+
+    '<p style="margin-top:16px;font-size:12px;color:var(--navy-mute)">You can leave and come back: your answers are saved on this device.</p></aside>';
+  var top='<div class="topbar"><div class="row1">Step '+(S.step+1)+' of '+STEPS.length+' · '+STEPS[S.step].t+'<span>~'+minsLeft()+' min left</span></div><div class="bar-out"><div class="bar-in" style="width:'+pct+'%"></div></div></div>';
+  var vb=(S.version>1&&!S.live)?'<div class="banner" style="margin-bottom:14px"><span>ⓘ</span><span>You are building <b>version '+S.version+'</b> from scratch. Version '+(S.version-1)+' keeps taking calls until you go live. <a href="#" id="cancelnew">Cancel and go back to version '+(S.version-1)+'</a></span></div>':'';
+  return '<div class="shell">'+side+'<div>'+top+'<main class="main">'+vb+inner+(navHtml||"")+footer()+'</main></div></div>';
+}
+function footer(){return '<div class="foot">Portfolio demo. All businesses, calls and records are fictional. <a href="#" id="reset">Erase everything and start over</a>'+(EMBED?"":' · <a href="#" id="phonebtn" class="devbtn">See the phone version</a>')+'</div>'}
+function nav(backOk,nextLabel,nextOk,hint){return '<div class="nav">'+(backOk?'<button class="btn quiet" id="back">Back</button>':'<span></span>')+(hint?'<span class="muted" style="font-size:12.5px;flex:1;text-align:right">'+hint+'</span>':'')+'<button class="btn go" id="next"'+(nextOk===false?" disabled":"")+'>'+nextLabel+'</button></div>'}
+
+/* ---------- screens ---------- */
+function screenLogin(){
+  return '<div class="login"><div class="card"><div class="brand" style="color:var(--ink)"><i></i><div>Voice Receptionist<small style="color:var(--muted)">Voice receptionist for your business</small></div></div>'+
+   '<h1 style="margin-top:20px;font-size:26px">Welcome back</h1><p class="muted" style="margin-top:6px">Sign in with your account to set up your phone agent. Takes about 15 minutes.</p>'+
+   '<label class="f" for="em">Work email</label><input id="em" type="email" value="mike@ridgelineroofing.example" autocomplete="off">'+
+   '<label class="f" for="pw">Password</label><input id="pw" type="password" value="prototype" autocomplete="off">'+
+   '<button class="btn go" id="signin" style="width:100%;margin-top:18px">Sign in</button>'+
+   '<p class="muted" style="font-size:12.5px;margin-top:12px">Prototype: no account is needed and nothing is sent anywhere. Portfolio demo with fictional data.</p></div></div>';
+}
+function screenStart(){
+  var inner='<span class="kicker">Step 1 of 8</span><h1 style="margin-top:6px">Let’s set up your phone agent</h1>'+
+   '<p class="muted" style="margin-top:8px;max-width:62ch">It answers calls you miss, asks the safety questions, books inspections into your schedule and texts the customer. You stay in control: you can listen back to every call and change anything.</p>'+
+   '<div class="cols"><div class="card"><h2>Have these ready</h2>'+
+   ['<b>An admin login</b> (you just used it). Your services, schedule and customers are read from it.','<b>The phone number your customers call.</b> You keep it; we only forward missed calls to the agent.','<b>A number for emergencies</b>: the person who should get a live transfer for a collapse, fire or active flooding.','<b>A phone or computer with a microphone</b>, for the test call.','<b>About 15 minutes.</b> You can stop and come back.'].map(function(x){return '<div class="check ok"><span class="ic">✓</span><div>'+x+'</div></div>'}).join("")+
+   '<div class="say"><b>What you do not need:</b> any technical knowledge, a new phone number, code, or to choose AI models. We handle those.</div></div>'+
+   who(['Reads your company details, hours, service types and technician calendar from your account','Chooses the speech, language and voice technology','Runs the three fixed roof-safety questions and the confirm-before-saving rule'],['What the agent is allowed to book','Words and names specific to your trade','Its name, voice and greeting','When calls are forwarded to it'])+'</div>';
+  return shell(inner,nav(false,"Start setup",true));
+}
+function screenBusiness(){var c=S.cfg;
+  var inner='<span class="kicker">Step 2 of 8</span><h1 style="margin-top:6px">Your business</h1><p class="muted" style="margin-top:8px">We filled this in from your account. Fix anything that is out of date.</p>'+
+   '<div class="cols"><div class="card"><label class="f" for="company">Company name <span class="imp">Imported</span></label><input id="company" type="text" value="'+esc(c.company)+'">'+
+   '<label class="f" for="hours">When is your office open? <span class="imp">Imported</span><small>Outside these hours the agent says the office is closed and still books for the next working day.</small></label><input id="hours" type="text" value="'+esc(c.hours)+'">'+
+   '<label class="f" for="area">Where do you work? <span class="imp">Imported</span><small>Counties, cities or zip codes. Callers outside this area are told kindly, and offered a callback.</small></label><input id="area" type="text" value="'+esc(c.area)+'">'+
+   '<label class="f" for="callback">When does the office call people back?<small>The agent only ever promises this, nothing faster.</small></label><select id="callback">'+["within 2 hours","same business day","next business day"].map(function(o){return '<option'+(o===c.callback?" selected":"")+'>'+o+'</option>'}).join("")+'</select></div>'+
+   who(['Imported: company name, hours, service area, service types, technician calendars','Keeps the agent’s answers in line with your records'],['Confirm or correct the details','How fast you promise to call back'])+'</div>';
+  return shell(inner,nav(true,"Continue",true));
+}
+function screenAbilities(){var s=S.cfg.svc;
+  var inner='<span class="kicker">Step 3 of 8</span><h1 style="margin-top:6px">What can the agent do on a call?</h1><p class="muted" style="margin-top:8px">Start small. You can widen this later once you have heard it work.</p>'+
+   '<div class="cols"><div class="card"><h2>Visits it may book into your schedule</h2>'+
+   '<label class="opt"><input type="checkbox" id="s_ins"'+(s.inspection?" checked":"")+'><span><b>Roof inspection</b><small>Books a slot in your “Inspections” calendar and creates the service request and job.</small></span></label>'+
+   '<label class="opt"><input type="checkbox" id="s_rep"'+(s.repair?" checked":"")+'><span><b>Repair visit</b><small>For leaks, loose shingles, flashing. Books like an inspection.</small></span></label>'+
+   '<label class="opt"><input type="checkbox" id="s_ins2"'+(s.install==="book"?" checked":"")+'><span><b>Install or replace: let the agent book it</b><small>Off by default. When off, it takes the details and the office calls back.</small></span></label>'+
+   '<h2 style="margin-top:22px">If the caller describes an emergency</h2><label class="f" for="emph">Who should get a live transfer?<small>Used for a collapse, fire or sparks, or water near electrics.</small></label><input id="emph" type="text" value="'+esc(S.cfg.emergencyPhone)+'">'+
+   '<div class="opt fixed" style="margin-top:14px"><span class="lock">🔒 Fixed</span><span><b>Roof-safety questions come first</b><small>Whenever a caller mentions a leak, water or storm damage, the agent asks three fixed safety questions before booking. This is a platform rule so it cannot be switched off by mistake.</small></span></div>'+
+   '<div class="opt fixed"><span class="lock">🔒 Fixed</span><span><b>Nothing is saved until the caller says yes</b><small>The agent reads the visit back and saves exactly what the caller heard.</small></span></div>'+
+   '<div class="opt fixed"><span class="lock">🔒 Fixed</span><span><b>No prices, no promises it cannot keep</b><small>It never quotes prices or sends a crew; it can offer a callback.</small></span></div></div>'+
+   who(['Safety questions, confirmation step, speech recognition and response speed','Reads your free time slots live from your account','Creates the customer, property, request and job records'],['Which visit types it can book','Who takes an emergency transfer','Install and replace: book or call back'])+'</div>';
+  return shell(inner,nav(true,"Continue",!!S.cfg.emergencyPhone.trim()));
+}
+function screenWords(){var c=S.cfg;
+  var sug=SUGGESTED.filter(function(w){return c.words.indexOf(w)<0});
+  var inner='<span class="kicker">Step 4 of 8</span><h1 style="margin-top:6px">Your roofing words</h1><p class="muted" style="margin-top:8px;max-width:62ch">Phone audio is noisy and trade words get misheard (“valley matter” for “valley metal”). Words you add here are listened for first, and the agent checks any it is unsure of before saving.</p>'+
+   '<div class="cols"><div class="card"><h2>Words the agent listens for</h2><div class="chips" id="wchips">'+c.words.map(function(w,i){return '<span class="chip">'+esc(w)+'<button data-del="'+i+'" aria-label="Remove '+esc(w)+'">×</button></span>'}).join("")+'</div>'+
+   '<label class="f" for="neww">Add a word or name<small>Product names, brands, crew names, local streets.</small></label><div style="display:flex;gap:8px"><input id="neww" type="text" placeholder="for example Malarkey shingles"><button class="btn" id="addw">Add</button></div>'+
+   '<h3 style="margin-top:18px">Suggested from your past jobs</h3><div class="chips">'+(sug.length?sug.map(function(w){return '<button class="chip sug" data-add="'+esc(w)+'">+ '+esc(w)+'</button>'}).join(""):'<span class="muted">All suggestions added.</span>')+'</div></div>'+
+   who(['Suggests words from your past jobs, products and the cities you serve','Boosts these words in speech recognition','Flags words it was unsure about so nothing wrong is saved'],['Which words matter to your business','Names the agent should know'])+'</div>';
+  return shell(inner,nav(true,"Continue",true));
+}
+function screenVoice(){var c=S.cfg;
+  var inner='<span class="kicker">Step 5 of 8</span><h1 style="margin-top:6px">Name, voice and greeting</h1><p class="muted" style="margin-top:8px">This is how callers meet your business. Callers are always told it is a virtual assistant.</p>'+
+   '<div class="cols"><div class="card"><label class="f" for="persona">Agent’s first name</label><input id="persona" type="text" maxlength="20" value="'+esc(c.persona)+'">'+
+   '<h3 style="margin-top:18px">Voice</h3>'+VOICES.map(function(v){return '<label class="opt"><input type="radio" name="voice" value="'+v[0]+'"'+(c.voice===v[0]?" checked":"")+'><span><b>'+v[1]+'</b><small>'+v[2]+'</small></span></label>'}).join("")+
+   '<h3 style="margin-top:18px">Tone</h3><label class="opt"><input type="radio" name="tone" value="warm"'+(c.tone==="warm"?" checked":"")+'><span><b>Warm and brisk</b><small>Friendly, short sentences. Best for most homeowners.</small></span></label><label class="opt"><input type="radio" name="tone" value="formal"'+(c.tone==="formal"?" checked":"")+'><span><b>Formal</b><small>Courteous and measured. Uses Mr. or Ms.</small></span></label>'+
+   '<label class="f" for="gint">Opening line<small>The part after this is added by us: it tells callers the call may be recorded, as the law often requires.</small></label><input id="gint" type="text" value="'+esc(c.greetingIntro||("Thanks for calling "+c.company+", this is "+c.persona+", the virtual assistant."))+'">'+
+   '<div class="preview" id="gprev"><small>Greeting callers will hear</small><span id="gtext">'+esc(greetingText())+'</span></div>'+
+   '<label class="f" for="rules">Anything else the agent should always do or never do? <small>Optional. For example “Always ask if the roof is a single-storey home.”</small></label><textarea id="rules" maxlength="400">'+esc(c.rules)+'</textarea></div>'+
+   who(['Turns text into natural speech; sets pace so addresses and dates are easy to follow','Adds the recording notice and the “virtual assistant” disclosure','Keeps your extra rules from overriding safety and confirmation steps'],['Name, voice and tone','Your opening line','Extra do and don’t rules in plain words'])+'</div>';
+  return shell(inner,nav(true,"Continue",!!c.persona.trim()));
+}
+function screenPhone(){var f=S.cfg.fwd;
+  var inner='<span class="kicker">Step 6 of 8</span><h1 style="margin-top:6px">Connect your phone line</h1><p class="muted" style="margin-top:8px;max-width:62ch">Keep your number. When you do not answer, your carrier sends the call to your agent’s number. No new SIM, no app to install on the crew’s phones.</p>'+
+   '<div class="cols"><div class="card"><h2>When should the agent pick up?</h2>'+
+   [["after","Only when I do not answer (recommended for the pilot)","Forwards after 4 rings, busy, or off. You stay in charge of every call you can take."],["hours","After hours and weekends only","The agent covers nights and weekends; you answer during the day."],["all","Every call","The agent answers every call. Best after a few weeks of good results."]].map(function(o){return '<label class="opt"><input type="radio" name="fwd" value="'+o[0]+'"'+(f.mode===o[0]?" checked":"")+'><span><b>'+o[1]+'</b><small>'+o[2]+'</small></span></label>'}).join("")+
+   '<div class="say" style="margin-top:14px"><b>Your agent’s number:</b> <span style="font:600 15px var(--f-mono)">(425) 555-0199</span><br>On your phone, dial <span style="font:600 14px var(--f-mono)">'+(f.mode==="all"?"*21*":"*61*")+'4255550199#</span> (most US carriers). We will check it worked in the next step.</div>'+
+   '<div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="btn" id="verify">'+(f.verified?"Check again":"Check forwarding")+'</button><span id="vstat" class="status">'+(f.verified?'<span class="pill ok">Forwarding works</span>':"Not checked yet")+'</span></div></div>'+
+   who(['Provides the agent’s number and carrier dial codes','Rings your phone to verify forwarding, and reminds you if it stops working','Handles telephony, audio quality and reliability'],['Which calls go to the agent','Doing the one-time dial on your phone (30 seconds)'])+'</div>';
+  return shell(inner,nav(true,"Continue",!!f.verified,f.verified?"":"Check forwarding to continue"));
+}
+
+/* test call screen */
+var live={room:null,steps:[],records:[],transcript:[],ended:false,started:false,interim:null,metrics:[],hello:false,timer:null,startAt:0};
+function screenTest(){var t=S.test;
+  var inner='<span class="kicker">Step 7 of 8</span><h1 style="margin-top:6px">Try it: make a test call</h1><p class="muted" style="margin-top:8px;max-width:64ch">Call your agent as if you were a customer. Use a made-up name and address. It runs with the greeting, words and rules you just set. You will see what it heard, decided and saved.</p>'+
+   '<div class="cols"><div class="card" id="testcard">'+testCardHtml()+'</div><div>'+
+   '<div class="card"><h2>Did it do the right things?</h2><p class="muted" style="font-size:13.5px;margin-top:4px">Checked automatically from the call.</p><div id="checks">'+checksHtml()+'</div><div id="verdict"></div></div>'+
+   '<div class="card" style="margin-top:14px"><h2>What the agent saved</h2><div id="savedcard">'+savedHtml()+'</div></div>'+
+   '<div class="card" style="margin-top:14px"><h2>Fix and improve</h2><p class="muted" style="font-size:13.5px;margin-top:4px">Heard something wrong? Change it here, then test again.</p>'+
+   '<div id="issues">'+issuesHtml()+'</div>'+
+   '<label class="f" for="quickw">Add a word it missed</label><div style="display:flex;gap:8px"><input id="quickw" type="text" placeholder="for example valley metal"><button class="btn" id="quickadd">Add</button></div>'+
+   '<label class="f" for="quickr">Add a rule in plain words</label><div style="display:flex;gap:8px"><input id="quickr" type="text" placeholder="Always ask about access, like a gate or pet"><button class="btn" id="quickrule">Add</button></div>'+
+   '<p class="muted" style="font-size:12.5px;margin-top:8px">Greeting, name and voice: <a href="#" data-go="4">edit them in step 5</a>.</p></div></div></div>';
+  return shell(inner,nav(true,"Continue to go live",!!t.passed,t.passed?"":"Pass the test call to continue"));
+}
+function curScen(){return SCEN.filter(function(x){return x.id===(S.scenario||"booking")})[0]||SCEN[0]}
+function testCardHtml(){
+  if(!live.started){
+    var sc=curScen();
+    return '<h2>Choose a call to try</h2><p class="muted" style="font-size:13.5px;margin-top:4px">Real callers are not all the same. Try each of these before you go live.</p>'+
+     SCEN.map(function(x){return '<label class="opt"><input type="radio" name="scen" value="'+x.id+'"'+(x.id===sc.id?" checked":"")+'><span><b>'+x.title+'</b><small>'+x.why+'</small></span></label>'}).join("")+
+     '<div class="say"><b>What to do:</b> '+sc.say+' Calls stop after 6 minutes and are not recorded or stored. Use headphones.</div>'+
+     '<div id="passrow" class="hide"><label class="f" for="passcode">Passcode<small>Given with this prototype.</small></label><input id="passcode" type="password" autocomplete="off"></div>'+
+     '<div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="btn go" id="startcall">Start test call</button><span class="status"><span class="dot" id="sdot"></span><span id="stext">Ready</span></span></div>'+
+     '<div id="err" class="err hide" role="alert"></div>'+
+     '<div style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px"><b>Cannot make a live call right now?</b><p class="muted" style="font-size:13.5px;margin:4px 0 8px">Listen to a recorded example call instead. It shows the same checks.</p><audio controls preload="none" src="assets/example_call.mp3" style="width:100%"></audio><div style="margin-top:8px"><button class="btn" id="useexample">Use the example result</button></div></div>';
+  }
+  return '<div style="display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between"><span class="status"><span class="dot on" id="ldot"></span><span id="ltext">Connecting…</span></span><span style="font:500 12.5px var(--f-mono);color:var(--muted)" id="timer"></span>'+(live.ended?'<button class="btn go" id="again">Try another call</button>':'<button class="btn end" id="endcall">End call</button>')+'</div><p class="muted" style="font-size:13px;margin-top:8px">Call: '+curScen().title+'</p><div class="tx" id="tx" aria-live="polite">'+live.transcript.map(msgHtml).join("")+'</div>';
+}
+function msgHtml(m){return '<div class="msg '+m.speaker+'"><b>'+(m.speaker==="agent"?esc(S.cfg.persona):"You")+'</b>'+esc(m.text)+'</div>'}
+function toolNames(){return live.steps.filter(function(s){return s.tool}).map(function(s){return s.tool.name})}
+function hasRec(t){return live.records.some(function(r){return r.type===t})}
+var STD=[["greet","Greeted the caller with your greeting","It says your opening line, then asks how it can help."],["safety","Asked the roof-safety questions","Needed when the caller mentions a leak, water or storm damage."],["confirm","Read the details back and waited for a yes before saving","Nothing is saved until the caller agrees."],["saved","Booked the visit in your schedule","A customer, property, request and job were created."],["text","Texted the details only after the caller agreed","Skipped if the caller declined."],["logged","Logged the call on the customer’s record","So your office can see what happened."]];
+var SCEN=[
+ {id:"booking",title:"A storm-damage booking",mode:"new",why:"The everyday call: someone wants a repair visit.",say:"Say: “Hi, a storm knocked some shingles loose and I think the flashing is lifting. Can someone come out next Tuesday afternoon?” Then give a made-up name, an address in your service area and a time.",checks:STD,req:["greet","saved","logged"],ok:"The agent booked the visit correctly and logged the call.",bad:"A booking was not completed. Try again and give a name, an address and a time that is offered."},
+ {id:"returning",title:"A returning customer",mode:"existing",why:"The phone number is already in your records.",say:"You are Sam Carter. Say: “Hi, I need a roof inspection at my house.” When asked, give 318 Cedar Ridge Drive, Everett. The agent should check the address before using your name.",checks:[["greet",STD[0][1],STD[0][2]],["match","Matched the address before using the caller’s details","It never reads your stored details aloud first."],STD[2],STD[3],STD[4],STD[5]],req:["greet","match","saved","logged"],ok:"The agent recognised the customer, confirmed the address and booked the visit.",bad:"The visit was not booked. Give the address when asked and pick a time that is offered."},
+ {id:"emergency",title:"An emergency leak",mode:"new",why:"Safety comes first: it should hand over to a person.",say:"Say: “Water is coming through my ceiling, right next to a light fixture.” Answer yes when asked about water near lights, and yes to a sagging ceiling.",checks:[["greet",STD[0][1],STD[0][2]],["safety","Asked the three safety questions",""],["transfer","Handed the call to your emergency line","It says it is urgent and mentions 911."],["nobook","Did not try to book a visit","A booking can wait; safety cannot."],["urgentcase","Opened an urgent case with the caller’s own words","So your team sees exactly what was said."],STD[5]],req:["greet","safety","transfer","nobook","logged"],ok:"The agent recognised the emergency, transferred the call and booked nothing.",bad:"The agent did not hand the call over. Say yes to the safety questions and try again."},
+ {id:"outside",title:"A caller outside your area",mode:"new",why:"It should say no kindly and still keep the lead.",say:"Say: “I’d like a roof inspection.” Give a made-up name and an address in a city you do not serve, such as Tacoma. Accept a callback.",checks:[["greet",STD[0][1],STD[0][2]],["area","Checked the service area",""],["nobook","Did not offer or book a visit",""],["callback","Created a callback task for your office",""],STD[5]],req:["greet","area","nobook","callback","logged"],ok:"The agent said it was outside the area, did not book, and left a callback for your office.",bad:"Something was missed: check that you gave an address outside your service area and accepted the callback."},
+ {id:"quiet",title:"A caller who goes quiet",mode:"new",why:"Nobody should hang up on silence, and nothing should be lost.",say:"Say nothing after the greeting. Stay quiet for about 20 seconds and listen to what the agent does.",checks:[["greet",STD[0][1],STD[0][2]],["checkin","Checked in: “Are you still there?”","After 4 seconds, up to twice."],["ended","Ended the call politely","After a goodbye and a short pause."],["lead","Saved an unconfirmed lead and a callback task","Nothing the caller said is treated as confirmed."],STD[5]],req:["greet","checkin","ended","logged"],ok:"The agent checked in twice, ended politely, and still left a lead and a callback task.",bad:"Stay silent for about 20 seconds after the greeting and let the call finish."}
+];
+function recOf(t){return live.records.filter(function(r){return r.type===t})}
+function computeChecks(){
+  if(S.test.example&&!live.started){return S.test.checks}
+  var sc=curScen(),names=toolNames(),end=live.ended,r={};
+  function T(v){return v?true:(end?false:null)}
+  var saved=recOf("Job").length>0,logged=recOf("Call log").length>0,cases=recOf("Case");
+  var firstRead=names.indexOf("read_back"),firstBook=names.indexOf("create_inspection_booking");
+  r.greet=T(live.hello&&live.transcript.some(function(m){return m.speaker==="agent"}));
+  r.safety=names.indexOf("record_triage")>=0?true:(sc.id==="emergency"&&end?false:null);
+  r.confirm=saved?(firstRead>=0&&firstRead<firstBook):null;
+  r.saved=T(saved);
+  r.text=recOf("Text message").length?true:(saved&&end?false:null);
+  r.logged=T(logged);
+  r.match=names.indexOf("match_property")>=0?true:(saved&&end?false:null);
+  r.transfer=T(names.indexOf("transfer_to_human")>=0);
+  r.nobook=end?(!saved&&names.indexOf("create_inspection_booking")<0):null;
+  r.urgentcase=T(cases.some(function(c){return c.fields&&c.fields.priority==="urgent"}));
+  r.area=T(names.indexOf("check_service_area")>=0);
+  r.callback=T(cases.length>0);
+  r.checkin=T(live.steps.filter(function(s){return s.kind==="silence"}).length>=1);
+  r.ended=T(live.endReason==="no_response");
+  r.lead=T(recOf("Service request").some(function(q){return q.fields&&q.fields.status==="Incomplete lead"}));
+  return r;
+}
+function checksHtml(){var c=computeChecks();return curScen().checks.map(function(k){var v=c[k[0]];var cls=v===true?"ok":(v===false?"bad":"");return '<div class="check '+cls+'"><span class="ic">'+(v===true?"✓":(v===false?"!":"·"))+'</span><div>'+k[1]+(k[2]?'<small>'+k[2]+'</small>':'')+'</div></div>'}).join("")}
+function fmtDt(v){var m=/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$/.exec(v);if(!m)return v;var mo=["January","February","March","April","May","June","July","August","September","October","November","December"][+m[2]-1],d=+m[3],suf=(d%100>=11&&d%100<=13)?"th":({1:"st",2:"nd",3:"rd"}[d%10]||"th"),h=+m[4];return mo+" "+d+suf+", "+m[1]+" at "+((h%12)||12)+":"+m[5]+" "+(h<12?"AM":"PM")}
+var PICK=["name","start","service_address","category","title","status","type","priority","note","to","outcome"];
+function savedHtml(){
+  if(!live.records.length)return '<p class="muted" style="font-size:13.5px;margin-top:8px">Nothing has been saved yet. After a call, what the agent wrote into your records shows here, in plain words, so you can compare it with what you said.</p>';
+  return live.records.map(function(r){var f=r.fields||{},rows=PICK.filter(function(k){return f[k]!=null&&f[k]!==""&&typeof f[k]!=="object"}).slice(0,4).map(function(k){return '<div class="muted" style="font-size:13px"><b style="color:var(--ink)">'+k.replace(/_/g," ")+':</b> '+esc(fmtDt(String(f[k])))+'</div>'}).join("");return '<div class="check ok"><span class="ic">✓</span><div><b>'+esc(r.type)+' '+esc(r.id)+'</b> <span class="pill ok">'+esc(r.action)+'</span>'+rows+'</div></div>'}).join("");
+}
+function issuesHtml(){
+  var flagged=live.steps.filter(function(s){return s.kind==="safety"&&/unsure|low confidence|heard|not sure/i.test((s.title||"")+(s.detail||""))});
+  if(!live.started&&!S.test.example)return '<p class="muted" style="font-size:13.5px;margin-top:8px">After the call, anything the agent was unsure about shows up here.</p>';
+  if(flagged.length)return flagged.map(function(s){return '<div class="attn"><div><b>'+esc(s.title)+'</b><div class="muted" style="font-size:13px">'+esc(s.detail||"")+'</div></div></div>'}).join("");
+  return '<div class="good">Nothing was flagged as unclear on this call. Compare the transcript with what was saved.</div>';
+}
+function verdict(){var sc=curScen(),c=computeChecks();var must=sc.req.every(function(k){return c[k]===true});var el=$("verdict");if(!el)return;
+  if(live.ended&&must){S.test.passed=true;S.test.example=false;save();el.innerHTML='<div class="good"><b>Test passed.</b> '+sc.ok+' Try the other calls too, then go live.</div>';var nx=$("next");if(nx)nx.disabled=false}
+  else if(live.ended){el.innerHTML='<div class="err"><b>Not yet.</b> '+sc.bad+'</div>'}
+  else el.innerHTML=""}
+function refreshTest(){var cc=$("checks");if(cc)cc.innerHTML=checksHtml();var sv=$("savedcard");if(sv)sv.innerHTML=savedHtml();var is=$("issues");if(is)is.innerHTML=issuesHtml();verdict()}
+
+/* go live */
+function screenGoLive(){var c=S.cfg;
+  var items=[["Test call passed",S.test.passed],["Emergency transfer number set",!!c.emergencyPhone],["Phone forwarding checked",c.fwd.verified],["Greeting and name set",!!c.persona&&!!greetingText()],["Roofing words added ("+c.words.length+")",c.words.length>0]];
+  var ready=items.every(function(i){return i[1]});
+  var inner='<span class="kicker">Step 8 of 8</span><h1 style="margin-top:6px">Ready to go live?</h1><p class="muted" style="margin-top:8px">We check the essentials for you. Going live only changes which calls are forwarded: you can pause or switch back at any moment.</p>'+
+   '<div class="cols"><div class="card"><h2>Readiness</h2>'+items.map(function(i){return '<div class="check '+(i[1]?"ok":"bad")+'"><span class="ic">'+(i[1]?"✓":"!")+'</span><div>'+i[0]+'</div></div>'}).join("")+
+   '<h3 style="margin-top:18px">Recommended start</h3><div class="say">'+(c.fwd.mode==="after"?"Forward only the calls you miss for the first week, then review the calls together.":"You chose a wider rollout. Consider starting with missed calls only for the first week.")+'</div><p class="muted" style="margin-top:10px;font-size:13.5px">Your setup took <b style="color:var(--ink)">'+fmtDur(elapsed())+'</b> so far (target: 15 minutes).</p></div>'+
+   who(['Turns the agent on and starts counting calls, bookings and hang-ups','Sends you a daily summary and flags calls that need a human'],['When to start, and which calls','Pausing the agent at any time'])+'</div>';
+  return shell(inner,'<div class="nav"><button class="btn quiet" id="back">Back</button><button class="btn go" id="golive"'+(ready?"":" disabled")+'>Go live</button></div>');
+}
+
+/* dashboard */
+var CALLS=[["Today 9:12 AM","Maria L.","Booked: roof inspection, Thu Nov 19th, 2026 at 2:00 PM","ok","Booked"],["Today 8:40 AM","Unknown caller","Hung up before giving details (after the greeting)","warn","Hang-up"],["Yesterday 6:55 PM","Daniel P.","Leak after storm: safety questions asked, transferred to your emergency line","bad","Transferred"],["Yesterday 2:21 PM","Aisha K.","Booked: repair visit, Fri Nov 20th, 2026 at 9:00 AM","ok","Booked"],["Yesterday 11:03 AM","Tom R.","Billing question: case logged, callback promised same business day","warn","Callback"],["Mon 4:30 PM","Lena W.","Outside service area: told kindly, callback offered","mute","Callback"]];
+function screenDash(){var tab=S.tab||"overview",c=S.cfg;
+  var tabs=[["overview","Overview"],["calls","Calls"],["settings","Settings"],["versions","Change history"]];
+  var body="";
+  if(tab==="overview"){
+    body='<div class="kpis"><div class="card kpi"><b>42</b><span>Calls answered this week</span></div><div class="card kpi"><b>19</b><span>Visits booked (45%)</span></div><div class="card kpi"><b>3</b><span>Need your attention</span></div><div class="card kpi"><b>1.4 s</b><span>Typical time to first word</span></div></div>'+
+     '<p class="muted" style="font-size:12.5px;margin-top:8px">Sample numbers for the prototype. Time to first word is the figure measured on the prototype’s test calls.</p>'+
+     '<div class="card" style="margin-top:14px"><h2>Needs your attention</h2>'+
+     '<div class="attn"><div><b>“Valley matter” may have been heard instead of “valley metal”</b><div class="muted" style="font-size:13px">2 calls this week. Add the word so it is recognised.</div></div><button class="btn" data-fix="valley metal">Add “valley metal”</button></div>'+
+     '<div class="attn"><div><b>Daniel P. was sent to your emergency line</b><div class="muted" style="font-size:13px">Yesterday 6:55 PM · storm leak · please call him back.</div></div><button class="btn" data-tab="calls">Open call</button></div>'+
+     '<div class="attn"><div><b>3 callers hung up before giving details</b><div class="muted" style="font-size:13px">Mostly after hours. Consider a shorter greeting.</div></div><button class="btn" data-tab="settings">Edit greeting</button></div></div>'+
+     '<div class="card" style="margin-top:14px"><h2>Your setup</h2><p class="muted" style="margin-top:4px">Set up in <b style="color:var(--ink)">'+fmtDur(elapsed())+'</b> with 1 test call. Forwarding: '+({after:"missed calls only",hours:"after hours and weekends",all:"every call"}[c.fwd.mode])+'.</p></div>';
+  }else if(tab==="calls"){
+    body='<div class="card" style="margin-top:14px"><h2>Recent calls</h2><div class="scroll"><table class="tbl"><thead><tr><th>When</th><th>Caller</th><th>What happened</th><th>Result</th></tr></thead><tbody>'+CALLS.map(function(r){return '<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td>'+esc(r[2])+'</td><td><span class="pill '+r[3]+'">'+r[4]+'</span></td></tr>'}).join("")+'</tbody></table></div><p class="muted" style="font-size:13px;margin-top:10px">Open any call to listen to it, read the transcript and see what was saved: the same view you used in the test call.</p></div>';
+  }else if(tab==="settings"){
+    body='<div class="cols"><div class="card"><h2>Edit what callers hear and what the agent does</h2><div class="banner" style="margin-top:10px"><span>ⓘ</span><span>Changes are saved as a draft. Test the draft, then publish. Calls keep using the published version until you do.</span></div>'+
+     '<label class="f" for="d_gint">Opening line</label><input id="d_gint" type="text" value="'+esc(c.greetingIntro||("Thanks for calling "+c.company+", this is "+c.persona+", the virtual assistant."))+'">'+
+     '<label class="f" for="d_rules">Extra rules</label><textarea id="d_rules" maxlength="400">'+esc(c.rules)+'</textarea>'+
+     '<label class="f" for="d_word">Add a roofing word</label><div style="display:flex;gap:8px"><input id="d_word" type="text"><button class="btn" id="d_addw">Add</button></div><div class="chips">'+c.words.map(function(w,i){return '<span class="chip">'+esc(w)+'<button data-ddel="'+i+'" aria-label="Remove '+esc(w)+'">×</button></span>'}).join("")+'</div>'+
+     '<div class="preview" style="margin-top:14px"><small>Draft greeting</small><span id="d_prev">'+esc(greetingText())+'</span></div>'+
+     '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px"><button class="btn" id="d_test">Test this draft</button><button class="btn go" id="d_pub">Publish change</button></div><div id="d_msg"></div></div>'+
+     who(['Keeps every published version so you can go back','Runs the fixed safety and confirmation checks on every draft','Shows you the call result before it goes live'],['What to change and when','Publishing or leaving it as it is'])+'</div>';
+  }else{
+    var vs=S.versions.slice().reverse();
+    body='<div class="card" style="margin-top:14px"><h2>Change history</h2>'+
+     (vs.length?'':'')+'<div class="check ok"><span class="ic">✓</span><div><b>Version '+S.version+' (live)</b><small>Set up '+(new Date(S.doneAt||Date.now()).toLocaleDateString())+'. Greeting: “'+esc(greetingText().slice(0,70))+'…”</small></div></div>'+
+     vs.map(function(v,i){return '<div class="check"><span class="ic">·</span><div><b>Version '+S.version+' · edit '+(S.versions.length-i)+'</b><small>'+esc(v.when)+' · '+esc(v.what)+'</small></div><button class="btn" data-rollback="'+(S.versions.length-1-i)+'" style="margin-left:auto">Go back to this</button></div>'}).join("")+
+     S.archive.map(function(a,i){return {a:a,i:i}}).reverse().map(function(o){return '<div class="check"><span class="ic">·</span><div><b>Version '+o.a.version+' (earlier setup)</b><small>Set up '+(new Date(o.a.doneAt||Date.now()).toLocaleDateString())+' · '+esc(o.a.cfg.company)+' · greeting: “'+esc((o.a.cfg.greetingIntro||"Thanks for calling "+o.a.cfg.company).slice(0,50))+'…”</small></div><button class="btn" data-restore="'+o.i+'" style="margin-left:auto">Make this live again</button></div>'}).join("")+
+     '<p class="muted" style="font-size:13px;margin-top:10px">Every published change is kept. Going back takes effect on the next call. “Create a new version from scratch” starts the setup again and keeps this one here until the new version goes live.</p></div>';
+  }
+  var inner='<div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap"><div><span class="kicker">'+esc(c.company)+'</span><h1 style="margin-top:4px">Your agent is '+(S.paused?'paused':'live')+' <span class="muted" style="font-size:16px;font-weight:600">(version '+S.version+')</span></h1></div><div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><button class="btn" id="newver">Create a new version from scratch</button><label class="switch"><input type="checkbox" id="pause"'+(S.paused?"":" checked")+'><span><b>'+(S.paused?"Paused":"Taking calls")+'</b></span></label></div></div>'+
+   '<div class="tabs" role="tablist">'+tabs.map(function(t){return '<button class="tab" role="tab" data-tab="'+t[0]+'" aria-selected="'+(t[0]===tab)+'">'+t[1]+'</button>'}).join("")+'</div>'+body;
+  return '<div class="shell"><aside class="side"><div class="brand"><i></i><div>Voice Receptionist<small>'+esc(c.company)+'</small></div></div><span class="tag">Concept prototype</span><ol class="stepper">'+tabs.map(function(t){return '<li class="can '+(t[0]===tab?"cur":"")+'" data-tab="'+t[0]+'"><span class="n">'+t[1][0]+'</span><span>'+t[1]+'</span></li>'}).join("")+'</ol><p style="margin-top:20px;font-size:12px;color:var(--navy-mute)">Sample data. Settings are yours to change at any time.</p></aside><div><div class="topbar"><div class="row1">'+esc(c.company)+'<span>'+(S.paused?"Paused":"Live")+'</span></div></div><main class="main">'+inner+footer()+'</main></div></div>';
+}
+
+/* ---------- render + events ---------- */
+function render(){
+  var html;
+  if(!S.signedIn)html=screenLogin();
+  else if(S.live)html=screenDash();
+  else html=[screenStart,screenBusiness,screenAbilities,screenWords,screenVoice,screenPhone,screenTest,screenGoLive][S.step]();
+  $("app").innerHTML=html; bind(); window.scrollTo(0,0);
+  if(S.step===6&&!S.live){refreshTest();initPasscode()}
+}
+function go(n){S.step=Math.max(0,Math.min(STEPS.length-1,n));save();render()}
+function val(id){var e=$(id);return e?e.value:""}
+function collect(){
+  var c=S.cfg;
+  if($("company")){c.company=val("company").trim()||c.company;c.hours=val("hours").trim()||c.hours;c.area=val("area").trim()||c.area;c.callback=val("callback")}
+  if($("s_ins")){c.svc.inspection=$("s_ins").checked;c.svc.repair=$("s_rep").checked;c.svc.install=$("s_ins2").checked?"book":"callback";c.emergencyPhone=val("emph")}
+  if($("persona")){c.persona=val("persona").trim();var v=document.querySelector('input[name=voice]:checked');if(v)c.voice=v.value;var t=document.querySelector('input[name=tone]:checked');if(t)c.tone=t.value;c.greetingIntro=val("gint");c.rules=val("rules")}
+  var f=document.querySelector('input[name=fwd]:checked');if(f&&f.value!==c.fwd.mode){c.fwd.mode=f.value;c.fwd.verified=false}
+  save()
+}
+function bind(){
+  var q=function(s,fn){var e=document.querySelectorAll(s);for(var i=0;i<e.length;i++)fn(e[i])};
+  if($("signin"))$("signin").onclick=function(){S.signedIn=true;S.startedAt=Date.now();S.step=0;save();render()};
+  if($("next"))$("next").onclick=function(){collect();if(S.step===0&&!S.startedAt){S.startedAt=Date.now()}go(S.step+1)};
+  if($("back"))$("back").onclick=function(){collect();go(S.step-1)};
+  q("[data-go]",function(e){e.onclick=function(ev){ev.preventDefault();collect();go(+e.getAttribute("data-go"))}});
+  if($("reset"))$("reset").onclick=function(ev){ev.preventDefault();if(confirm("Erase all saved setup data, including earlier versions, and start again?")){try{localStorage.removeItem(KEY)}catch(e){}S=clone(DEFAULTS);live={room:null,steps:[],records:[],transcript:[],ended:false,started:false,interim:null,metrics:[],hello:false,timer:null,startAt:0};render()}};
+  if($("newver"))$("newver").onclick=function(){if(confirm("Create version "+(S.version+1)+" from scratch? Version "+S.version+" keeps taking calls until the new one goes live, and stays in the change history.")){newVersion()}};
+  if($("cancelnew"))$("cancelnew").onclick=function(ev){ev.preventDefault();if(confirm("Discard version "+S.version+" and go back to version "+(S.version-1)+"?")){cancelNewVersion()}};
+  q("[data-restore]",function(e){e.onclick=function(){var i=+e.getAttribute("data-restore");if(confirm("Make version "+S.archive[i].version+" live again? Version "+S.version+" moves to the history.")){makeLiveAgain(i)}}});
+  if($("phonebtn"))$("phonebtn").onclick=function(ev){ev.preventDefault();showPhone()};
+  /* words */
+  q("[data-del]",function(e){e.onclick=function(){S.cfg.words.splice(+e.getAttribute("data-del"),1);save();render()}});
+  q("[data-add]",function(e){e.onclick=function(){S.cfg.words.push(e.getAttribute("data-add"));save();render()}});
+  if($("addw"))$("addw").onclick=addWord;if($("neww"))$("neww").onkeydown=function(ev){if(ev.key==="Enter"){ev.preventDefault();addWord()}};
+  /* voice greeting live preview */
+  if($("gint")){var upd=function(){var c=S.cfg;c.persona=val("persona")||c.persona;c.greetingIntro=val("gint");$("gtext").textContent=greetingText()};$("gint").oninput=upd;$("persona").oninput=function(){var g=$("gint");if(!S.cfg.greetingIntro||/this is [^,]+,/.test(g.value))g.value=g.value.replace(/this is [^,]+,/,"this is "+val("persona")+",");upd()}}
+  /* phone */
+  if($("verify"))$("verify").onclick=function(){collect();var b=$("verify");b.disabled=true;$("vstat").textContent="Ringing your phone…";setTimeout(function(){S.cfg.fwd.verified=true;save();render()},1800)};
+  q('input[name=fwd]',function(e){e.onchange=function(){collect();render()}});
+  /* test */
+  q("input[name=scen]",function(e){e.onchange=function(){S.scenario=e.value;save();var tc=$("testcard");if(tc){tc.innerHTML=testCardHtml();bind();initPasscode()}refreshTest()}});
+  if($("startcall"))$("startcall").onclick=startCall;
+  if($("endcall"))$("endcall").onclick=function(){if(live.room)live.room.disconnect()};
+  if($("again"))$("again").onclick=function(){resetLive();render()};
+  if($("useexample"))$("useexample").onclick=function(){S.test.example=true;S.test.passed=true;S.test.checks={greet:true,safety:true,confirm:true,saved:true,text:true,logged:true};save();render()};
+  if($("quickadd"))$("quickadd").onclick=function(){var w=val("quickw").trim();if(w&&S.cfg.words.indexOf(w)<0){S.cfg.words.push(w);save();$("quickw").value="";$("quickadd").textContent="Added ✓"}};
+  if($("quickrule"))$("quickrule").onclick=function(){var r=val("quickr").trim();if(r){S.cfg.rules=(S.cfg.rules?S.cfg.rules+" ":"")+r;save();$("quickr").value="";$("quickrule").textContent="Added ✓"}};
+  /* go live */
+  if($("golive"))$("golive").onclick=function(){S.archive.forEach(function(a){a.retired=true});S.live=true;S.doneAt=Date.now();S.tab="overview";S.paused=false;save();render()};
+  /* dashboard */
+  q("[data-tab]",function(e){e.onclick=function(){S.tab=e.getAttribute("data-tab");save();render()}});
+  q("[data-fix]",function(e){e.onclick=function(){var w=e.getAttribute("data-fix");if(S.cfg.words.indexOf(w)<0)S.cfg.words.push(w);save();e.textContent="Added ✓";e.disabled=true}});
+  if($("pause"))$("pause").onchange=function(){S.paused=!$("pause").checked;save();render()};
+  if($("d_addw"))$("d_addw").onclick=function(){var w=val("d_word").trim();if(w&&S.cfg.words.indexOf(w)<0){S.cfg.words.push(w);save();render();S.tab="settings"}};
+  q("[data-ddel]",function(e){e.onclick=function(){S.cfg.words.splice(+e.getAttribute("data-ddel"),1);save();render()}});
+  if($("d_gint"))$("d_gint").oninput=function(){S.cfg.greetingIntro=val("d_gint");$("d_prev").textContent=greetingText()};
+  if($("d_rules"))$("d_rules").oninput=function(){S.cfg.rules=val("d_rules");save()};
+  if($("d_test"))$("d_test").onclick=function(){$("d_msg").innerHTML='<div class="say">In the full product this opens the same test call with your draft. Here, use “Start over” to run the test call again.</div>'};
+  if($("d_pub"))$("d_pub").onclick=function(){S.cfg.greetingIntro=val("d_gint");S.cfg.rules=val("d_rules");S.versions.push({when:new Date().toLocaleString(),what:"Greeting, rules or words changed"});save();$("d_msg").innerHTML='<div class="good">Published. New calls use this version. The previous one is kept in the change history.</div>'};
+  q("[data-rollback]",function(e){e.onclick=function(){S.versions.splice(+e.getAttribute("data-rollback"));save();render()}});
+}
+function addWord(){var w=val("neww").trim();if(w&&S.cfg.words.indexOf(w)<0){S.cfg.words.push(w);save();render();var n=$("neww");if(n)n.focus()}}
+
+/* ---------- phone preview ---------- */
+function showPhone(){document.body.classList.add("phoneon");$("phoneview").innerHTML='<div class="phone"><iframe src="setup.html?embed=1" title="Phone version" allow="microphone"></iframe></div><div class="pvnote"><span class="kicker">Phone version</span><h2 style="margin:6px 0">The same setup on a phone</h2><p class="muted">The layout switches to one column with a progress bar on top and the main button pinned to the bottom. Resize this window below 900 px wide to see it full screen.</p><button class="btn" id="closephone" style="margin-top:14px">Back to desktop view</button></div>';$("closephone").onclick=function(){document.body.classList.remove("phoneon");$("phoneview").innerHTML=""}}
+
+/* ---------- live test call ---------- */
+function resetLive(){if(live.timer)clearInterval(live.timer);live={room:null,steps:[],records:[],transcript:[],ended:false,started:false,interim:null,metrics:[],hello:false,timer:null,startAt:0,endReason:""};S.test={passed:S.test.passed,example:false,checks:{}};save()}
+function initPasscode(){fetch(TOKEN_URL).then(function(r){return r.json()}).then(function(j){var p=$("passrow");if(p&&j.passcode_required)p.classList.remove("hide")}).catch(function(){var t=$("stext");if(t)t.textContent="The call service is not reachable yet. You can use the recorded example below."})}
+function showErr(m){var e=$("err");if(e){e.textContent=m;e.classList.toggle("hide",!m)}}
+async function startCall(){
+  collect();showErr("");$("startcall").disabled=true;$("stext").textContent="Asking for microphone and connecting…";
+  try{
+    var c=S.cfg;
+    var body={mode:curScen().mode,passcode:val("passcode"),persona:c.persona,business:c.company,keyterms:c.words,hours:c.hours,voice:c.voice,greeting:greetingText(),rules:rulesText(),service_area:c.area,services:servicesList()};
+    var r=await fetch(TOKEN_URL,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
+    var j=await r.json();if(!r.ok)throw new Error(j.error||"Could not start the call");
+    var room=new LivekitClient.Room({adaptiveStream:true,dynacast:true});live.room=room;
+    room.on(LivekitClient.RoomEvent.TrackSubscribed,function(track){if(track.kind==="audio"){var el=track.attach();el.autoplay=true;document.body.appendChild(el)}});
+    room.on(LivekitClient.RoomEvent.DataReceived,function(payload,p,kind,topic){if(topic!=="voice-trace")return;try{onMsg(JSON.parse(new TextDecoder().decode(payload)))}catch(e){}});
+    room.on(LivekitClient.RoomEvent.ActiveSpeakersChanged,function(sp){var d=$("ldot");if(d)d.className="dot "+(sp.some(function(s){return !s.isLocal})?"talk":"on")});
+    room.on(LivekitClient.RoomEvent.Disconnected,function(){live.ended=true;if(live.timer)clearInterval(live.timer);if(S.step===6&&!S.live){var tc=$("testcard");if(tc){tc.innerHTML=testCardHtml();bind()}refreshTest()}});
+    await room.connect(j.url,j.token);await room.startAudio();await room.localParticipant.setMicrophoneEnabled(true);
+    live.started=true;live.startAt=Date.now();S.test={passed:false,example:false,checks:{}};
+    var tc=$("testcard");tc.innerHTML=testCardHtml();bind();$("ltext").textContent="On the call: speak whenever you are ready";
+    live.timer=setInterval(function(){var t=$("timer");if(t){var s=Math.floor((Date.now()-live.startAt)/1000);t.textContent=Math.floor(s/60)+":"+("0"+(s%60)).slice(-2)+" / 6:00"}},500);
+    refreshTest();
+  }catch(e){
+    showErr(e.name==="NotAllowedError"?"The microphone is blocked. Allow it for this page and try again.":(e.message||"Could not start the call."));
+    var s=$("stext");if(s)s.textContent="Ready";var b=$("startcall");if(b)b.disabled=false;if(live.room){try{live.room.disconnect()}catch(x){}}live.started=false;
+  }
+}
+function onMsg(m){
+  if(m.t==="hello"){live.hello=true}
+  else if(m.t==="transcript"){
+    var tx=$("tx");
+    if(m.speaker==="caller"&&!m.final){if(!live.interim&&tx){live.interim=document.createElement("div");live.interim.className="msg caller interim";tx.appendChild(live.interim)}if(live.interim)live.interim.innerHTML="<b>You</b>"+esc(m.text);if(tx)tx.scrollTop=tx.scrollHeight;return}
+    if(m.speaker==="caller"&&live.interim){live.interim.remove();live.interim=null}
+    if(!m.text)return;live.transcript.push({speaker:m.speaker,text:m.text});
+    if(tx){var d=document.createElement("div");d.innerHTML=msgHtml({speaker:m.speaker,text:m.text});tx.appendChild(d.firstChild);tx.scrollTop=tx.scrollHeight}
+  }
+  else if(m.t==="step"){live.steps.push(m.step)}
+  else if(m.t==="records"){live.records=m.changes||[]}
+  else if(m.t==="state"){var L={listening:"Listening: speak whenever you are ready",thinking:"Thinking",speaking:"Speaking: you can interrupt"};var e=$("ltext");if(e&&L[m.state])e.textContent=L[m.state]}
+  else if(m.t==="end"){live.endReason=m.reason;var e2=$("ltext");if(e2)e2.textContent=m.reason==="time_limit"?"Time limit reached":(m.reason==="no_response"?"No answer heard: call ended":"Call complete")}
+  refreshTest();
+}
+
+render();
+})();
+</script>
+</body>
+</html>

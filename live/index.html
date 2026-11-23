@@ -1,0 +1,220 @@
+<meta charset="utf-8">
+<title>Call Ava Live</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: setup card on top, then a live call area: transcript left, what the agent is doing right. */
+:root{
+  --bg:#f8f5f0; --card:#fff; --ink:#16202e; --muted:#5b6574; --line:#e8ddd5; --soft:#f3ece4;
+  --orange:#fd5000; --orange-ink:#c63d00; --orange-soft:#fff1ec;
+  --caller:#3d63a8; --listen:#6b3fe0; --think:#e04600; --read:#0a8a96; --write:#12875a; --safety:#b5271c; --speak:#16202e; --call:#6b7280;
+  --ok-bg:#e6f6ee; --ok-ink:#0d6b47; --warn-bg:#fff4dc; --warn-ink:#8a5a00; --bad-bg:#fde8e6; --bad-ink:#9b2218;
+  --f-head:"Plus Jakarta Sans","Inter",system-ui,sans-serif; --f-body:"Inter",system-ui,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12151b; --card:#1b1f27; --ink:#eef1f6; --muted:#9aa4b2; --line:#2b313c; --soft:#222732;
+  --orange:#ff6a2b; --orange-ink:#ff9a6b; --orange-soft:#2d1d16;
+  --caller:#7ea3e6; --listen:#a58bff; --think:#ff7a3d; --read:#4fc3cf; --write:#4fd29c; --safety:#ff7b6f; --speak:#eef1f6; --call:#9aa4b2;
+  --ok-bg:#10281e; --ok-ink:#6fe0aa; --warn-bg:#2e2410; --warn-ink:#f2c466; --bad-bg:#3a1714; --bad-ink:#ff9a90; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12151b; --card:#1b1f27; --ink:#eef1f6; --muted:#9aa4b2; --line:#2b313c; --soft:#222732;
+  --orange:#ff6a2b; --orange-ink:#ff9a6b; --orange-soft:#2d1d16;
+  --caller:#7ea3e6; --listen:#a58bff; --think:#ff7a3d; --read:#4fc3cf; --write:#4fd29c; --safety:#ff7b6f; --speak:#eef1f6; --call:#9aa4b2;
+  --ok-bg:#10281e; --ok-ink:#6fe0aa; --warn-bg:#2e2410; --warn-ink:#f2c466; --bad-bg:#3a1714; --bad-ink:#ff9a90; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-body);margin:0;padding-block:20px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1240px;margin:0 auto;min-width:0}
+h1,h2,h3{font-family:var(--f-head);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:clamp(26px,4vw,38px);line-height:1.12;font-weight:800}
+h2{font-size:19px;font-weight:800} h3{font-size:15px;font-weight:700} p{margin:0}
+.kicker{font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.banner{display:flex;gap:10px;background:var(--warn-bg);color:var(--warn-ink);border-radius:10px;padding:10px 14px;font-size:13px;margin:14px 0 18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.setup{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:16px}
+@media(max-width:900px){.setup,.live{grid-template-columns:minmax(0,1fr)!important}}
+.opt{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;margin-top:8px;background:var(--card)}
+.opt input{margin-top:4px;accent-color:var(--orange)}
+.opt:has(input:checked){border-color:var(--orange);background:var(--orange-soft)}
+.opt small{display:block;color:var(--muted)}
+label.f{display:block;font-size:13px;font-weight:600;margin-top:12px}
+input[type=text],input[type=password]{width:100%;font:inherit;padding:9px 11px;border:1.5px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink);margin-top:4px}
+.btn{font:600 14px var(--f-body);border:1.5px solid var(--line);background:var(--card);color:var(--ink);padding:10px 16px;border-radius:10px;cursor:pointer}
+.btn.go{background:var(--orange);border-color:var(--orange);color:#fff;font-size:15px;padding:12px 22px}
+.btn.end{background:var(--bad-bg);border-color:var(--safety);color:var(--bad-ink)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn:focus-visible,input:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+.status{display:inline-flex;gap:8px;align-items:center;font-size:13px;color:var(--muted)}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--call);display:inline-block}
+.dot.on{background:var(--write)} .dot.talk{background:var(--orange)}
+ul.clean{margin:8px 0 0;padding-left:18px;color:var(--muted)} ul.clean li{margin:3px 0}
+.say{background:var(--orange-soft);border-radius:10px;padding:10px 12px;margin-top:8px;font-size:14px}
+.live{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:16px;margin-top:16px}
+.bar{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+.tx{display:flex;flex-direction:column;gap:8px;margin-top:12px;max-height:520px;overflow:auto;padding-right:4px}
+.msg{padding:9px 12px;border-radius:12px;max-width:92%;overflow-wrap:anywhere}
+.msg.agent{background:var(--card);border:1px solid var(--line);align-self:flex-start}
+.msg.caller{background:var(--soft);align-self:flex-end}
+.msg.interim{opacity:.6;font-style:italic}
+.msg b{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:-4px 0 10px;overflow-x:auto}
+.tab{background:none;border:0;border-bottom:3px solid transparent;padding:8px 12px;font:600 13.5px var(--f-body);color:var(--muted);cursor:pointer;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--orange)}
+.pane{max-height:560px;overflow:auto}
+.steps{list-style:none;margin:0;padding:0}
+.step{display:grid;grid-template-columns:62px 14px minmax(0,1fr);gap:8px;padding:7px 0}
+.step .off{font:500 11.5px var(--f-mono);color:var(--muted);text-align:right;padding-top:2px}
+.step .rail{position:relative}.step .rail::before{content:"";position:absolute;left:6px;top:0;bottom:-14px;width:2px;background:var(--line)}
+.step .rail i{position:absolute;left:1px;top:5px;width:12px;height:12px;border-radius:50%;border:3px solid var(--c);background:var(--card)}
+.st{font-weight:600;font-size:14px}.sd{color:var(--muted);font-size:13px;overflow-wrap:anywhere;margin-top:2px}
+.sm{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:4px;font-size:12px;color:var(--muted)}
+.ms{font:600 12px var(--f-mono);color:var(--ink)}
+.turnh{margin:12px 0 0;font:700 13px var(--f-head);color:var(--orange-ink)}
+details.tech summary{cursor:pointer;font-size:12px;color:var(--muted)}
+pre{margin:6px 0 0;background:var(--soft);padding:8px 10px;border-radius:8px;font:12px/1.5 var(--f-mono);overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere}
+.src{font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:1px 6px;border-radius:4px;background:var(--ok-bg);color:var(--ok-ink)}
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.tbl th{text-align:left;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:8px 8px;border-bottom:1px solid var(--line)}
+.tbl td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top;overflow-wrap:anywhere}
+.pill{font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:999px;display:inline-block}
+.pill.Created{background:var(--ok-bg);color:var(--ok-ink)}.pill.Updated{background:var(--warn-bg);color:var(--warn-ink)}
+.from{color:var(--muted);text-decoration:line-through;margin-right:6px}.to{font-weight:600}.fld{display:block;margin:1px 0}.fld span{color:var(--muted)}
+.big{font:800 40px var(--f-head);color:var(--orange-ink)}
+.row{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
+.hide{display:none!important}
+.empty{color:var(--muted)}
+.err{background:var(--bad-bg);color:var(--bad-ink);border-radius:10px;padding:10px 14px;margin-top:10px;font-size:14px}
+</style>
+
+<div class="wrap">
+  <span class="kicker">Voice Receptionist · Live call prototype</span>
+  <h1 style="margin-top:6px">Call Ava and book a roofing visit</h1>
+  <p style="color:var(--muted);max-width:70ch;margin-top:8px">Speak with the voice agent as a new customer. Give the work you need, the address and the time you prefer, and watch what it hears, decides, looks up and saves, with the time each step takes.</p>
+  <div class="banner" role="note"><span aria-hidden="true">ⓘ</span><span>Portfolio demo. The agent is an AI. Please do not share real personal details: use a made-up name and address. Calls use your microphone, are not recorded or stored, and stop after 6 minutes. All records are fictional and live only for this call.</span></div>
+
+  <div class="setup" id="setup">
+    <div class="card">
+      <h2>Start a call</h2>
+      <div id="pass" class="hide"><label class="f" for="passcode">Passcode</label><input id="passcode" type="password" autocomplete="off" placeholder="Given with this page"></div>
+      <label class="opt"><input type="radio" name="mode" value="new" checked><span><b>I’m a new customer</b><small>The phone number is not in the records. Ava will ask for your name, address and the work.</small></span></label>
+      <label class="opt"><input type="radio" name="mode" value="existing"><span><b>I’m a returning customer (Sam Carter)</b><small>The phone number matches a customer with a property at 318 Cedar Ridge Drive, Everett.</small></span></label>
+      <div style="margin-top:16px;display:flex;flex-wrap:wrap;gap:12px;align-items:center"><button class="btn go" id="start">Start call</button><span class="status"><span class="dot" id="sdot"></span><span id="stext">Ready</span></span></div>
+      <div id="err" class="err hide" role="alert"></div>
+    </div>
+    <div class="card">
+      <h2>What to say</h2>
+      <ul class="clean"><li>Say what the roof needs, for example a leak, storm damage or loose shingles.</li><li>Ava asks three safety questions if water or a storm is involved.</li><li>Give a name (spell the last name), an address in Everett, Bothell, Kenmore, Lynnwood or Seattle, and a time.</li><li>The demo calendar is <b style="color:var(--ink)">Monday, November 16, 2026</b>, with openings from Thursday the 19th to Wednesday the 25th.</li><li>Try interrupting Ava, or change your mind mid-sentence.</li></ul>
+      <div class="say"><b>Example opening:</b> “Hi, a storm knocked some shingles off my roof and I think the flashing is loose. Can someone come out next Tuesday afternoon?”</div>
+    </div>
+  </div>
+
+  <div class="live hide" id="live">
+    <div class="card">
+      <div class="bar"><span class="status"><span class="dot on" id="ldot"></span><span id="ltext">Connecting…</span></span><span class="ms" id="timer">0:00 / 6:00</span><button class="btn end" id="end">End call</button></div>
+      <div class="tx" id="tx" aria-live="polite"></div>
+    </div>
+    <div class="card">
+      <div class="tabs" role="tablist"><button class="tab" role="tab" data-t="steps" aria-selected="true">What Ava is doing</button><button class="tab" role="tab" data-t="records" aria-selected="false">Records</button><button class="tab" role="tab" data-t="speed" aria-selected="false">Response time</button></div>
+      <div class="pane" id="p-steps"><p class="empty" id="steps-empty">Steps appear here as the call goes on.</p><div id="steps"></div></div>
+      <div class="pane hide" id="p-records"><p class="empty">Nothing saved yet. Records appear here the moment Ava saves them, and only after you say yes.</p></div>
+      <div class="pane hide" id="p-speed"><p class="empty">Measured for each reply once Ava has spoken.</p></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/livekit-client@2.19.2/dist/livekit-client.umd.js"></script>
+<script>
+(function(){
+var LOCAL = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+var TOKEN_URL = window.AVA_TOKEN_URL || (LOCAL ? "http://localhost:8787/token" : "/api/token");
+var $ = function(id){return document.getElementById(id)};
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+var KIND = {call:["Call","var(--call)"],caller:["Caller","var(--caller)"],listen:["Listening","var(--listen)"],think:["Model","var(--think)"],tool_read:["Look-up","var(--read)"],tool_write:["Saved","var(--write)"],safety:["Safety net","var(--safety)"],speak:["Speaking","var(--speak)"],interrupt:["Interruption","var(--safety)"],silence:["Silence","var(--safety)"]};
+var room = null, timerId = null, startedAt = 0, steps = [], metrics = [], interimEl = null, maxSec = 360, lastTurn = -1;
+var felt = [], localTalking = false, localEnd = 0, waitingReply = false;
+function ms(v){return v>=1000?(v/1000).toFixed(2)+" s":Math.round(v)+" ms"}
+function setStatus(t,on){$("stext").textContent=t;$("sdot").className="dot"+(on?" on":"")}
+function showErr(m){var e=$("err"); e.textContent=m; e.classList.toggle("hide",!m)}
+
+// passcode requirement
+fetch(TOKEN_URL.replace(/\/token$/,"/token")).then(function(r){return r.json()}).then(function(j){ if(j.passcode_required) $("pass").classList.remove("hide"); }).catch(function(){ setStatus("The call service is not reachable yet.",false); });
+
+$("start").onclick = async function(){
+  showErr(""); $("start").disabled = true; setStatus("Asking for microphone and connecting…",false);
+  try{
+    var mode = document.querySelector('input[name=mode]:checked').value;
+    var r = await fetch(TOKEN_URL,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({mode:mode,passcode:$("passcode").value})});
+    var j = await r.json(); if(!r.ok) throw new Error(j.error||"Could not start the call");
+    room = new LivekitClient.Room({adaptiveStream:true,dynacast:true});
+    room.on(LivekitClient.RoomEvent.TrackSubscribed,function(track){ if(track.kind==="audio"){ var el=track.attach(); el.autoplay=true; document.body.appendChild(el);} });
+    room.on(LivekitClient.RoomEvent.DataReceived,function(payload,p,kind,topic){ if(topic!=="voice-trace") return; try{ handle(JSON.parse(new TextDecoder().decode(payload))); }catch(e){} });
+    room.on(LivekitClient.RoomEvent.ActiveSpeakersChanged,function(sp){
+      var agentTalking = sp.some(function(s){return !s.isLocal}), meTalking = sp.some(function(s){return s.isLocal}), now = Date.now();
+      $("ldot").className="dot "+(agentTalking?"talk":"on");
+      if(meTalking){ localTalking = true; waitingReply = false; }
+      else if(localTalking){ localTalking = false; localEnd = now; waitingReply = true; }
+      if(agentTalking && waitingReply && localEnd){ felt.push(now - localEnd); waitingReply = false; renderSpeed(); }
+    });
+    room.on(LivekitClient.RoomEvent.Disconnected,function(){ endUi("The call has ended."); });
+    await room.connect(j.url,j.token);
+    await room.startAudio();
+    await room.localParticipant.setMicrophoneEnabled(true);
+    $("setup").classList.add("hide"); $("live").classList.remove("hide");
+    $("ltext").textContent="On the call: speak whenever you are ready"; startedAt=Date.now(); steps=[]; metrics=[]; $("steps").innerHTML=""; $("tx").innerHTML=""; renderRecords([]); renderSpeed();
+    timerId = setInterval(tick,500); tick();
+  }catch(e){
+    showErr(e.name==="NotAllowedError"?"The microphone is blocked. Allow it for this page and try again.":(e.message||"Could not start the call."));
+    setStatus("Ready",false); $("start").disabled=false; if(room){ try{room.disconnect()}catch(x){} }
+  }
+};
+$("end").onclick = function(){ if(room) room.disconnect(); };
+function tick(){ var s=Math.floor((Date.now()-startedAt)/1000); $("timer").textContent=Math.floor(s/60)+":"+("0"+(s%60)).slice(-2)+" / "+Math.floor(maxSec/60)+":"+("0"+(maxSec%60)).slice(-2); }
+function endUi(msg){ clearInterval(timerId); $("ltext").textContent=msg; $("ldot").className="dot"; $("end").disabled=true; var b=document.createElement("button"); b.className="btn go"; b.textContent="Start a new call"; b.onclick=function(){location.reload()}; if(!document.getElementById("again")){ b.id="again"; $("end").parentNode.appendChild(b);} }
+
+function handle(m){
+  if(m.t==="hello"){ maxSec=m.max_seconds||240; $("ltext").textContent="On the call with "+m.persona+" at "+m.business+(m.mode==="existing"?" (returning customer)":" (new customer)"); }
+  else if(m.t==="transcript"){ addMsg(m); }
+  else if(m.t==="step"){ steps.push(m.step); renderSteps(); }
+  else if(m.t==="records"){ renderRecords(m.changes); }
+  else if(m.t==="metrics"){ metrics.push(m); renderSpeed(); }
+  else if(m.t==="state"){ var L={listening:"Ava is listening: speak whenever you are ready",thinking:"Ava is thinking",speaking:"Ava is speaking: you can interrupt",initializing:"Starting up"}; if(L[m.state]) $("ltext").textContent=L[m.state]; }
+  else if(m.t==="end"){ $("ltext").textContent=(m.reason==="time_limit")?"Time limit reached: wrapping up":(m.reason==="no_response"?"No answer heard: call ended":"Call complete"); }
+}
+function addMsg(m){
+  var tx=$("tx");
+  if(m.speaker==="caller" && !m.final){ if(!interimEl){ interimEl=document.createElement("div"); interimEl.className="msg caller interim"; tx.appendChild(interimEl);} interimEl.innerHTML="<b>You</b>"+esc(m.text); tx.scrollTop=tx.scrollHeight; return; }
+  if(m.speaker==="caller" && interimEl){ interimEl.remove(); interimEl=null; }
+  if(!m.text) return;
+  var d=document.createElement("div"); d.className="msg "+m.speaker; d.innerHTML="<b>"+(m.speaker==="agent"?"Ava":"You")+"</b>"+esc(m.text); tx.appendChild(d); tx.scrollTop=tx.scrollHeight;
+}
+function stepHtml(s){
+  var k=KIND[s.kind]||KIND.call, tech="";
+  if(s.tool) tech='<details class="tech"><summary>Technical details</summary><pre>'+esc(s.tool.name+"("+JSON.stringify(s.tool.args,null,1)+")\n→ "+JSON.stringify(s.tool.result,null,1))+'</pre></details>';
+  return '<li class="step" style="--c:'+k[1]+'"><span class="off">+'+s.t+' ms</span><span class="rail"><i></i></span><div><div class="st">'+esc(s.title)+'</div>'+(s.detail?'<div class="sd">'+esc(s.detail)+'</div>':'')+'<div class="sm"><span style="color:'+k[1]+';font-weight:600">'+k[0]+'</span><span>'+esc(s.actor)+'</span>'+(s.ms!=null?'<span class="ms">'+ms(s.ms)+'</span>':'')+'<span class="src">Measured</span></div>'+(s.note?'<div class="sm">'+esc(s.note)+'</div>':'')+tech+'</div></li>';
+}
+function renderSteps(){
+  $("steps-empty").classList.add("hide");
+  var groups={}; steps.forEach(function(s){(groups[s.turn]=groups[s.turn]||[]).push(s)});
+  $("steps").innerHTML = Object.keys(groups).map(function(t){ t=+t; return '<div class="turnh">'+(t===0?"Call start":"Turn "+t)+'</div><ol class="steps">'+groups[t].map(stepHtml).join("")+'</ol>'; }).join("");
+  var p=$("p-steps"); p.scrollTop=p.scrollHeight;
+}
+function fmtDt(v){ var m=/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$/.exec(v); if(!m) return v; var mo=["January","February","March","April","May","June","July","August","September","October","November","December"][+m[2]-1], d=+m[3], suf=(d%100>=11&&d%100<=13)?"th":({1:"st",2:"nd",3:"rd"}[d%10]||"th"), h=+m[4]; return mo+" "+d+suf+", "+m[1]+" at "+((h%12)||12)+":"+m[5]+" "+(h<12?"AM":"PM"); }
+function show(v){ if(v===null||v===undefined||v==="") return "empty"; if(typeof v==="object") return JSON.stringify(v).replace(/[\[\]{}"]/g,"").replace(/,/g,", "); return typeof v==="string"?fmtDt(v):v; }
+function val(v){ if(v&&typeof v==="object"&&!Array.isArray(v)&&("after" in v)) return '<span class="from">'+esc(show(v.before))+'</span><span class="to">'+esc(show(v.after))+'</span>'; return '<span class="to">'+esc(show(v))+'</span>'; }
+var FN={name:"Name",phone:"Phone",properties:"Properties",notes:"Notes",created_by:"Created by",last_contact:"Last contact",address:"Address",city:"City",access_notes:"Access notes",customer:"Customer",property:"Property",title:"What was asked",source:"Source",priority:"Priority",status:"Status",enquiry:"Linked request",category:"Service type",start:"Scheduled",tech:"Technician",service_address:"Service address",type:"Type",note:"Note",callback:"Callback",to:"Sent to",job:"Job",text:"Message",outcome:"Outcome",summary:"Summary",records:"Records",slot:"Slot",availability:"Availability"};
+function renderRecords(ch){
+  var p=$("p-records");
+  if(!ch.length){ p.innerHTML='<p class="empty">Nothing saved yet. Records appear here the moment Ava saves them, and only after you say yes.</p>'; return; }
+  p.innerHTML='<table class="tbl"><thead><tr><th>Record</th><th>Change</th><th>Details</th></tr></thead><tbody>'+ch.map(function(r){ return '<tr><td><b>'+esc(r.type)+'</b><br><span style="color:var(--muted);font-size:12px">'+esc(r.id)+'</span></td><td><span class="pill '+r.action+'">'+r.action+'</span></td><td>'+Object.keys(r.fields).map(function(k){return '<span class="fld"><span>'+esc(FN[k]||k)+':</span> '+val(r.fields[k])+'</span>'}).join("")+'</td></tr>'; }).join("")+'</tbody></table>';
+}
+function renderSpeed(){
+  var p=$("p-speed");
+  if(!metrics.length){ p.innerHTML='<p class="empty">Measured for each reply once Ava has spoken.</p>'; return; }
+  var avg=Math.round(metrics.reduce(function(a,m){return a+m.first_word_ms},0)/metrics.length);
+  var feltAvg = felt.length ? Math.round(felt.reduce(function(a,b){return a+b},0)/felt.length) : null;
+  p.innerHTML='<span class="kicker">Average time to first word</span><div class="big">'+ms(avg)+'</div><p style="color:var(--muted)">Measured by the voice pipeline: from the moment it detects your speech has ended to the first sound of Ava’s reply ('+metrics.length+' replies). Target: 1.2 s typical.</p>'+
+    (feltAvg!==null?'<div class="say" style="margin-top:10px"><b>As you experienced it, in this browser:</b> about <b>'+ms(feltAvg)+'</b> on average ('+felt.length+' replies). This adds the wait for the system to be sure you had finished, plus the network in both directions, so it is longer than the pipeline figure. It is approximate: it relies on the call service’s speaker detection.</div>':'')+
+    '<div style="margin-top:10px">'+metrics.map(function(m,i){ return '<div class="row"><span>Reply '+(i+1)+'</span><span><b class="ms">'+ms(m.first_word_ms)+'</b> <span style="color:var(--muted)">model first token '+ms(m.model_ttft_ms)+' · speech first audio '+ms(m.speech_ttfb_ms)+(felt[i]?' · felt '+ms(felt[i]):'')+'</span></span></div>'; }).join("")+'</div>';
+}
+document.querySelectorAll(".tab").forEach(function(b){ b.onclick=function(){ document.querySelectorAll(".tab").forEach(function(x){x.setAttribute("aria-selected",x===b)}); ["steps","records","speed"].forEach(function(t){ $("p-"+t).classList.toggle("hide",t!==b.dataset.t); }); }; });
+})();
+</script>

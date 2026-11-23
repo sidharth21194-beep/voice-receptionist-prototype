@@ -1,0 +1,5 @@
+livekit-agents[anthropic,deepgram,silero,turn-detector]==1.8.12
+anthropic==1.17.0
+google-genai==3.4.0
+python-dotenv==1.2.4
+numpy
