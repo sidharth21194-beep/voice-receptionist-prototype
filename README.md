@@ -5,7 +5,14 @@ It answers a call, asks fixed safety questions, books an inspection, and only sa
 
 All businesses, callers and records are fictional. This is a portfolio prototype, not a product.
 
-Live demo: https://voice-receptionist-demo-swart.vercel.app (the call page and the setup flow at /setup.html). Calling the agent needs a passcode; ask me for one.
+## Try it
+
+| Demo | Link | Passcode |
+|---|---|---|
+| Contractor setup flow: eight steps to a test call, dashboard, versions | [voice-receptionist-demo-swart.vercel.app/setup.html](https://voice-receptionist-demo-swart.vercel.app/setup.html) | Not needed to explore. The live test call at step 7 needs one; ask me for it |
+| Live call: talk to the agent in your browser and watch each step | [voice-receptionist-demo-swart.vercel.app](https://voice-receptionist-demo-swart.vercel.app) | Needed. Ask me for one |
+
+Use headphones and allow the microphone for a live call. Calls stop after 6 minutes.
 
 ## What is in here
 
