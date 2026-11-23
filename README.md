@@ -5,6 +5,8 @@ It answers a call, asks fixed safety questions, books an inspection, and only sa
 
 All businesses, callers and records are fictional. This is a portfolio prototype, not a product.
 
+Live demo: https://voice-receptionist-demo-swart.vercel.app (the call page and the setup flow at /setup.html). Calling the agent needs a passcode; ask me for one.
+
 ## What is in here
 
 | Part | Folder | What it is |

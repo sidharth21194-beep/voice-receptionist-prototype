@@ -10,7 +10,7 @@ async def main():
             "voice": "aura-2-apollo-en", "greeting": "Blue Peak Roofing, Riley speaking. This call may be recorded to help with your request. What can I do for you?",
             "rules": "Always ask whether the home is a single-storey house.", "service_area": "Pierce County, WA", "services": ["Roof Inspection"],
             "keyterms": ["Malarkey shingles"]}
-    req = urllib.request.Request("https://voice-receptionist-demo.vercel.app/api/token", data=json.dumps(body).encode(), headers={"content-type": "application/json"})
+    req = urllib.request.Request("https://voice-receptionist-demo-swart.vercel.app/api/token", data=json.dumps(body).encode(), headers={"content-type": "application/json"})
     tok = json.loads(urllib.request.urlopen(req).read())
     room = rtc.Room(); got = []; t0 = time.time()
     @room.on("data_received")
